@@ -8,14 +8,14 @@ from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 from google_analytics_plugin.hooks.google_analytics_hook import GoogleAnalyticsHook
 
 
-class GoogleAnalyticsAccountSummariesToS3Operator(BaseOperator):
-    template_fields = ('s3_key',)
+class GoogleAnalyticsAccountSummariesToGCSOperator(BaseOperator):
+    template_fields = ('gcs_object',)
 
     def __init__(self,
                  google_analytics_conn_id,
-                 s3_conn_id,
-                 s3_bucket,
-                 s3_key,
+                 gcs_conn_id,
+                 gcs_bucket,
+                 gcs_object,
                  brand,
                  space,
                  *args,
@@ -23,19 +23,19 @@ class GoogleAnalyticsAccountSummariesToS3Operator(BaseOperator):
         super().__init__(*args, **kwargs)
 
         self.google_analytics_conn_id = google_analytics_conn_id
-        self.s3_conn_id = s3_conn_id
-        self.s3_bucket = s3_bucket
-        self.s3_key = s3_key
+        self.gcs_conn_id = gcs_conn_id
+        self.gcs_bucket = gcs_bucket
+        self.gcs_object = gcs_object
         self.brand = brand
         self.space = space
 
     def execute(self, context):
         ga_conn = GoogleAnalyticsHook(self.google_analytics_conn_id)
-        s3_conn = S3Hook(self.s3_conn_id)
+        gcs_conn = GoogleCloudStorageHook(self.gcs_conn_id)
 
         account_summaries = ga_conn.get_account_summaries()
 
-        file_name = '/tmp/{key}.jsonl'.format(key=self.s3_key)
+        file_name = '/tmp/{key}.jsonl'.format(key=self.gcs_object)
         with open(file_name, 'w') as ga_file:
             data = []
             for item in account_summaries.get('items', []):
@@ -59,5 +59,5 @@ class GoogleAnalyticsAccountSummariesToS3Operator(BaseOperator):
             json_data = '\n'.join([json.dumps(d) for d in data])
             ga_file.write(json_data)
 
-        s3_conn.load_file(file_name, self.s3_key, self.s3_bucket, True)
+        gcs_conn.upload(self.gcs_bucket, self.gcs_object, file_name)
         os.remove(file_name)

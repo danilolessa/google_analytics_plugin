@@ -3,12 +3,17 @@ from google_analytics_plugin.hooks.google_analytics_hook import GoogleAnalyticsH
 from google_analytics_plugin.operators.google_analytics_reporting_to_s3_operator import GoogleAnalyticsReportingToS3Operator
 from google_analytics_plugin.operators.google_analytics_account_summaries_to_s3_operator import GoogleAnalyticsAccountSummariesToS3Operator
 
+from google_analytics_plugin.operators.google_analytics_reporting_to_gcs_operator import GoogleAnalyticsReportingToGCSOperator
+from google_analytics_plugin.operators.google_analytics_account_summaries_to_gcs_operator import GoogleAnalyticsAccountSummariesToGCSOperator
+
 
 class GoogleAnalyticsPlugin(AirflowPlugin):
     name = "google_analytics_plugin"
     hooks = [GoogleAnalyticsHook]
     operators = [GoogleAnalyticsReportingToS3Operator,
-                 GoogleAnalyticsAccountSummariesToS3Operator]
+                 GoogleAnalyticsReportingToGCSOperator,
+                 GoogleAnalyticsAccountSummariesToS3Operator,
+                 GoogleAnalyticsAccountSummariesToGCSOperator]
     executors = []
     macros = []
     admin_views = []
